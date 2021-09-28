@@ -8,6 +8,26 @@ local if_nil = vim.F.if_nil
 local hover = require('lspsaga.hover')
 local M = {}
 
+local diagnostic_severities = {
+  [vim.diagnostic.severity.ERROR] = { ctermfg = 1, guifg = "Red" };
+  [vim.diagnostic.severity.WARN] = { ctermfg = 3, guifg = "Orange" };
+  [vim.diagnostic.severity.INFO] = { ctermfg = 4, guifg = "LightBlue" };
+  [vim.diagnostic.severity.HINT] = { ctermfg = 7, guifg = "LightGrey" };
+}
+
+local function make_highlight_map(base_name)
+  local result = {}
+  for k in pairs(diagnostic_severities) do
+    local name = vim.diagnostic.severity[k]
+    name = name:sub(1, 1) .. name:sub(2):lower()
+    result[k] = "Diagnostic" .. base_name .. name
+  end
+
+  return result
+end
+
+local floating_highlight_map = make_highlight_map("Floating")
+
 local function _iter_diagnostic_move_pos(name, opts, pos)
   opts = opts or {}
 
@@ -89,7 +109,7 @@ local function show_diagnostics(opts, get_diagnostics)
 
   for i, diagnostic in ipairs(sorted_diagnostics) do
     local prefix = string.format("%d. ", i)
-    local hiname = lsp.diagnostic._get_floating_severity_highlight_name(diagnostic.severity)
+    local hiname = floating_highlight_map[diagnostic.severity]
     assert(hiname, 'unknown severity: ' .. tostring(diagnostic.severity))
 
     local message_lines = vim.split(diagnostic.message, '\n', true)
